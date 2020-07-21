@@ -1,0 +1,27 @@
+Config {
+       font = "xft:Tex Gyre Heros:style=Regular:pixelsize=12:antialias=true:hinting=true"
+       , bgColor = "black"
+       , fgColor = "grey"
+       , position = Top
+       , lowerOnStart = True
+       , commands = [
+       		    Run DynNetwork [ "--template" , "Up: <tx>kB/s, Down: <rx>kB/s"
+            			   , "--Low"      , "1000"       -- units: kB/s
+           			   , "--High"     , "5000"       -- units: kB/s
+           			   , "--low"      , "darkgreen"
+           			   , "--normal"   , "darkorange"
+           			   , "--high"     , "darkred"
+            			   ] 50
+       		    --Run DynNetwork ["-L","0","-H","32","--normal","purple","--high","red"] 10
+                    , Run Cpu ["-L","3","-H","50","--normal","purple","--high","red"] 10
+                    , Run Memory ["-t","Mem: <usedratio>%"] 10
+                    , Run CoreTemp ["-t","Temp: <core0>C|<core1>C","-L","40","-H","60","--low","purple","--high","red"] 50
+                    , Run UnsafeStdinReader
+                    , Run Date "%A, %B %_d    |    %r" "date" 10
+		    -- , Run Com "~/ShellScripts/datePP.sh" [] "mydate" 600
+                    , Run Locks
+                    ]
+       , sepChar = "%"
+       , alignSep = "}{"
+       , template = " %UnsafeStdinReader%} %date% {<fc=#91B362>%locks%</fc> %cpu% | %memory% | %dynnetwork% "
+}
