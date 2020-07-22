@@ -12,7 +12,9 @@
 --
 -- http://www.haskell.org/haskellwiki/Xmonad/Notable_changes_since_0.8
 --
-import XMonad
+import XMonad hiding ( (|||) )
+
+import XMonad.Actions.Submap
 
 import XMonad.Util.Run
 import XMonad.Util.SpawnOnce
@@ -26,10 +28,12 @@ import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.EwmhDesktops
 import XMonad.Hooks.ManageHelpers
 
+import XMonad.Layout hiding ( (|||) )
 import XMonad.Layout.Spacing
 import XMonad.Layout.Gaps
 import qualified XMonad.Layout.Fullscreen as F
 import XMonad.Layout.NoBorders
+import XMonad.Layout.LayoutCombinators
 
 import Data.Monoid
 import System.Exit
@@ -89,8 +93,11 @@ myPP = xmobarPP { ppCurrent = xmobarColor "#f07178" "" . wrap "[" "]" -- Current
                 , ppTitle = xmobarColor "#FFFFFF" "" . shorten 60     -- Title of active window in xmobar
                 , ppUrgent = xmobarColor "#C45500" "" . wrap "!" "!"  -- Urgent workspace
                 --, ppOrder  = \(ws:l:t:ex) -> [ws,l]++ex++[t]
-		, ppLayout = \_ -> ""
+		, ppLayout = layoutMap
 		}
+	where layoutMap s = case s of "Spacing Tall" -> "Tiled"
+				      "Spacing Full" -> "Focus"
+				      "Full"	     -> ""
 
 myRestartCommand = spawn "xmonad --recompile;killall xmobar;xmonad --restart"
 -- The default number of workspaces (virtual screens) and their names.
@@ -114,9 +121,14 @@ myFocusedBorderColor = "#DE4A4A"
 --
 myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
 
+    -- Swap the focused window and the master window
+    [ ((modm,               xK_Return), windows W.swapMaster)
+    
     -- launch a terminal
-    [ ((modm .|. shiftMask, xK_Return), spawn $ XMonad.terminal conf)
+    , ((modm .|. shiftMask, xK_Return), spawn $ XMonad.terminal conf)
 
+    
+    , ((modm,         xK_bracketright), spawn "systemctl suspend")
     -- launch dmenu
     --, ((modm,               xK_p     ), spawn "exe=`dmenu_path | dmenu` && eval \"exec $exe\"")
 
@@ -141,7 +153,12 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
     , ((modm,               xK_f     ), spawn "firefox")
 
     -- Rotate through the available layout algorithms
-    , ((modm,               xK_space ), sendMessage NextLayout)
+    -- , ((modm,               xK_space ), sendMessage NextLayout)
+    , ((modm,               xK_space ), submap . M.fromList $
+    					[ ((0, xK_z), sendMessage $ JumpToLayout "Spacing Tall")
+    					, ((0, xK_x), sendMessage $ JumpToLayout "Spacing Full")
+    					, ((0, xK_c), sendMessage $ JumpToLayout "Full")
+					])
 
     --  Reset the layouts on the current workspace to default
     , ((modm .|. shiftMask, xK_space ), setLayout $ XMonad.layoutHook conf)
@@ -166,9 +183,6 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
 
     -- Move focus to the master window
     , ((modm,               xK_m     ), windows W.focusMaster  )
-
-    -- Swap the focused window and the master window
-    , ((modm,               xK_Return), windows W.swapMaster)
 
     -- Swap the focused window with the next window
     , ((modm .|. shiftMask, xK_j     ), windows W.swapDown  )
@@ -290,23 +304,19 @@ myXPConfig = def
 
 mySpacing = spacingRaw False (Border 5 5 5 5) True (Border 5 5 5 5) True
 
-myTiled = mySpacing $ Tall nmaster delta ratio
+myTiled = avoidStruts . mySpacing $ Tall nmaster delta ratio
 	where
     	    nmaster = 1
     	    ratio   = 1/2
    	    delta   = 4/100
 
-myFocus = mySpacing Full
-
+myFocus = avoidStruts . mySpacing $ Full
 
 myFullscreen = noBorders . F.fullscreenFull $ Full
 
-myLayoutHook = avoidStruts myDefaultLayout
-  where
-    myDefaultLayout = myTiled
-	          ||| myFocus
-           	  ||| myFullscreen
-
+myLayoutHook = myTiled
+	   ||| myFocus 
+	   ||| myFullscreen
 
 ------------------------------------------------------------------------
 -- Window rules:
