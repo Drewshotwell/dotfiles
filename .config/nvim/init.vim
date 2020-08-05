@@ -1,29 +1,15 @@
-" Vim-Plug files
-" Go to https://github.com/junegunn/vim-plug
-" and https://github.com/junegunn/vim-plug/wiki for help
-call plug#begin('~/.config/nvim/plugged')
-
-" Conquer of Completion
-Plug 'neoclide/coc.nvim', {'branch': 'release'}
-
-" HIE
-Plug 'autozimu/LanguageClient-neovim', {
-    \ 'branch': 'next',
-    \ 'do': './install.sh'
-    \ }
-
-" Monokoi color theme
-Plug 'crusoexia/vim-monokai'
-
-" Spacegray color theme
-Plug 'ajh17/spacegray.vim'
-
-" Initialize plugin system
-call plug#end()
-
 syntax on
-" colorscheme monokai
-colorscheme spacegray
+
+source $HOME/.config/nvim/plugins.vim
+
+set termguicolors     " enable true colors support
+" let ayucolor="light"  " for light version of theme
+let ayucolor="mirage" " for mirage version of theme
+" let ayucolor="dark"   " for dark version of theme
+
+colorscheme ayu
+hi Normal guibg=NONE
+
 set number
 set mouse=a
 set clipboard=unnamedplus
@@ -39,4 +25,5 @@ map <Leader>lr :call LanguageClient#textDocument_rename()<CR>
 map <Leader>lf :call LanguageClient#textDocument_formatting()<CR>
 map <Leader>lb :call LanguageClient#textDocument_references()<CR>
 map <Leader>la :call LanguageClient#textDocument_codeAction()<CR>
-map <Leader>ls :call LanguageClient#textDocument_documentSymbol()<CR
+map <Leader>ls :call LanguageClient#textDocument_documentSymbol()<CR>
+
